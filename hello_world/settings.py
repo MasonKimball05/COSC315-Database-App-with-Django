@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 """
 
 import os
+from urllib.parse import parse_qs, unquote, urlparse
 from pathlib import Path
 from decouple import config
 
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_browser_reload",
+    "mythical_mane",
 ]
 
 MIDDLEWARE = [
@@ -83,12 +85,34 @@ WSGI_APPLICATION = "hello_world.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = config("DATABASE_URL", default=None)
+
+if DATABASE_URL:
+    parsed_url = urlparse(DATABASE_URL)
+    query_params = parse_qs(parsed_url.query)
+    sslmode = query_params.get("sslmode", [None])[0]
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": unquote(parsed_url.path.lstrip("/")),
+            "USER": unquote(parsed_url.username or ""),
+            "PASSWORD": unquote(parsed_url.password or ""),
+            "HOST": parsed_url.hostname or "",
+            "PORT": parsed_url.port or "",
+            "CONN_MAX_AGE": 600,
+        }
     }
-}
+
+    if sslmode:
+        DATABASES["default"]["OPTIONS"] = {"sslmode": sslmode}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation

@@ -4,8 +4,17 @@ import os
 import sys
 
 
+def ensure_virtualenv():
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    venv_python = os.path.join(repo_root, ".venv", "bin", "python")
+
+    if os.path.exists(venv_python) and sys.executable != venv_python:
+        os.execv(venv_python, [venv_python, *sys.argv])
+
+
 def main():
     """Run administrative tasks."""
+    ensure_virtualenv()
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hello_world.settings")
     try:
         from django.core.management import execute_from_command_line

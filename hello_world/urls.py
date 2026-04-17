@@ -24,6 +24,7 @@ from hello_world.core import views as core_views
 
 urlpatterns = [
     path("", core_views.index),
+    path("patients/", core_views.patient_list),
     path("admin/", admin.site.urls),
     path("__reload__/", include("django_browser_reload.urls")),
 ]
